@@ -114,11 +114,11 @@ class IconButton(QFrame):
         self.label.setFont(self.main_font)
 
         self.icon_button.setIconSize(QSize(35, 35))
-        self.clicked.emit()
         return super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent, /) -> None:
         self.main_font.setPointSize(20)
+        self.clicked.emit()
         self.label.setFont(self.main_font)
 
         self.icon_button.setIconSize(QSize(40, 40))

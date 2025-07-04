@@ -112,7 +112,6 @@ class TagPopup(QFrame):
         self.buttons.search.connect(self.prepare_search)
 
     def prepare_search(self) -> None:
-        # TODO: need to make the limit and random
 
         text = self.content_area.search_and_history.search_bar.text()
         text = parse(text, gelb_ready=True)
@@ -327,7 +326,6 @@ class SearchAndHistory(QFrame):
                 self.text_color = "#b5e48c"
                 self.set_stylesheet("#404040")
 
-
         def mousePressEvent(self, event: QMouseEvent, /) -> None:
             self.main_font.setPointSize(10)
             self.setFont(self.main_font)
@@ -386,7 +384,7 @@ class HistoryWidget(QFrame):
         self.limit_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.random_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.random = tag['random']
+        self.random = tag["random"]
         if not tag["random"]:
             color = "#c1121f"
         else:
@@ -597,12 +595,13 @@ class IconButton(QFrame):
         self.label.setFont(self.main_font)
 
         self.icon_button.setIconSize(QSize(35, 35))
-        self.clicked.emit()
         return super().mousePressEvent(event)
 
     def mouseReleaseEvent(self, event: QMouseEvent, /) -> None:
         self.main_font.setPointSize(20)
         self.label.setFont(self.main_font)
+        if self.rect().contains(event.pos()):
+            self.clicked.emit()
 
         self.icon_button.setIconSize(QSize(40, 40))
         return super().mouseReleaseEvent(event)
@@ -614,3 +613,6 @@ class IconButton(QFrame):
     def leaveEvent(self, event: QEvent, /) -> None:
         self.set_stylesheet("#303030")
         return super().leaveEvent(event)
+
+    def doubleClickEvent(self, event: QMouseEvent, /) -> None:
+        event.ignore()

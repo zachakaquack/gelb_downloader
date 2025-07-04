@@ -113,9 +113,12 @@ class Interface(QFrame):
         if self.popup:
             self.popup.close()
 
+        self.side_bar.setEnabled(True)
+
         self.load_new_image()
 
     def download_images(self):
+        self.side_bar.setEnabled(False)
         self.worker = serverside.ImageWorker()
 
         self.image_area.progress_bar(0, 0)

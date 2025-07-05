@@ -419,7 +419,7 @@ class HistoryWidget(QFrame):
         self.main_layout.addWidget(self.info_frame)
 
         self.text = self.format_text(tag["tags"])
-        self.label = QLabel(self.text)
+        self.label = self.EllipsisLabel(self.text)
         self.label.setFont(QFont("Jetbrains Mono", 14))
         self.label.mousePressEvent = lambda event: self.mouse_event(event)
 
@@ -437,6 +437,27 @@ class HistoryWidget(QFrame):
         )
         self.trash_button.set_icon_sizes(35, 40)
         self.trash_button.clicked.connect(lambda: self.remove.emit(self.index, self))
+
+    class EllipsisLabel(QLabel):
+        def __init__(self, text="", parent=None):
+            super().__init__(parent)
+            self._text = text
+            self.setText(text)
+            self.setMaximumWidth(375)
+
+
+        def setText(self, text):
+            self._text = text
+            self.updateText()
+
+        def resizeEvent(self, event):
+            super().resizeEvent(event)
+            self.updateText()
+
+        def updateText(self):
+            metrics = QFontMetrics(self.font())
+            elided = metrics.elidedText(self._text, Qt.TextElideMode.ElideRight, self.width())
+            super().setText(elided)
 
     def format_text(self, tags: str) -> str:
         string = ""

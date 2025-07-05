@@ -2,8 +2,10 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 import re
+import webbrowser
 
 from other import file_management
+from other.buttons import Button
 
 
 def parse(text: str, gelb_ready=False) -> list:
@@ -97,6 +99,11 @@ class TagPopup(QFrame):
         self.help_button.setCursor(Qt.CursorShape.PointingHandCursor)
         self.help_button.setIcon(QIcon("./assets/help.svg"))
         self.help_button.setIconSize(QSize(20, 20))
+        self.help_button.clicked.connect(
+            lambda: webbrowser.open(
+                "https://gelbooru.com/index.php?page=wiki&s=&s=view&id=26263"
+            )
+        )
 
         self.main_layout.addWidget(
             self.help_button, stretch=1, alignment=Qt.AlignmentFlag.AlignRight
@@ -117,9 +124,7 @@ class TagPopup(QFrame):
         text = parse(text, gelb_ready=True)
 
         limit = self.content_area.search_and_history.limit_spin.value()
-
-        # so stupid lmfao
-        random = not self.content_area.search_and_history.random_button.isChecked()
+        random = not self.content_area.search_and_history.random_button.is_checked
 
         file_management.save_search(text, limit, random)
 
@@ -144,8 +149,8 @@ class Buttons(QFrame):
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignRight
         )
 
-        self.cancel_button = IconButton("Cancel", QIcon("./assets/cancel.svg"))
-        self.search_button = IconButton("Search", QIcon("./assets/search.svg"))
+        self.cancel_button = Button("Cancel", QIcon("./assets/cancel.svg"))
+        self.search_button = Button("Search", QIcon("./assets/search.svg"))
 
         self.main_layout.addWidget(self.cancel_button)
         self.main_layout.addWidget(self.search_button)
@@ -268,18 +273,31 @@ class SearchAndHistory(QFrame):
 
     def load_history(self) -> None:
         history = file_management.get_history()
-        for tag in history:
-            l = HistoryWidget(tag)
+        for i, tag in enumerate(history):
+            l = HistoryWidget(tag, index=i)
             l.clicked.connect(self.copy_text)
+            l.remove.connect(self.remove_history_widget)
             self.history_layout.addWidget(l)
 
     def copy_text(self, text: str, _, limit: int, random: bool) -> None:
         self.search_bar.setText(text)
+
         self.limit_spin.setValue(limit)
-        # once again, so stupid (im stupid)
-        self.random_button.setChecked(not random)
+
+        self.random_button.is_checked = not random
         self.random_button.update_text_color()
         self.random_button.set_stylesheet("#303030")
+
+    def remove_history_widget(self, index, widget) -> None:
+        index = self.history_layout.indexOf(widget)
+        if index == -1:
+            print("Widget not found in layout")
+            return
+
+        file_management.remove_from_history(index)
+
+        self.history_layout.removeWidget(widget)
+        widget.deleteLater()
 
     def remove_tag(self, index: int):
         search_text = self.search_bar.text()
@@ -287,11 +305,12 @@ class SearchAndHistory(QFrame):
         parsed_search.pop(index)
         self.search_bar.setText(" ".join(parsed_search))
 
-    class RandomButton(QPushButton):
+    class RandomButton(Button):
         def __init__(self, *args, **kwargs):
             super().__init__(*args, *kwargs)
 
             self.setFixedSize(75, 40)
+            self.set_font_sizes(10, 12)
 
             self.main_font = QFont("Jetbrains Mono", 12)
             self.main_font.setPointSize(12)
@@ -299,11 +318,16 @@ class SearchAndHistory(QFrame):
 
             self.text_color = "#b5e48c"
 
-            self.set_stylesheet("#303030")
             self.clicked.connect(self.update_text_color)
-            self.setCheckable(True)
+
+            self.is_checked = True
+            self.current_color = ""
+            self.update_text_color()
+
+            self.set_stylesheet("#303030")
 
         def set_stylesheet(self, color: str) -> None:
+            self.current_color = color
 
             self.setStyleSheet(
                 f"""
@@ -319,7 +343,7 @@ class SearchAndHistory(QFrame):
             )
 
         def update_text_color(self):
-            if self.isChecked():
+            if self.is_checked:
                 self.text_color = "#c1121f"
                 self.set_stylesheet("#404040")
             else:
@@ -328,6 +352,7 @@ class SearchAndHistory(QFrame):
 
         def mousePressEvent(self, event: QMouseEvent, /) -> None:
             self.main_font.setPointSize(10)
+            self.is_checked = not self.is_checked
             self.setFont(self.main_font)
             self.clicked.emit()
 
@@ -342,20 +367,13 @@ class SearchAndHistory(QFrame):
 
             return super().mouseReleaseEvent(event)
 
-        def enterEvent(self, event: QEnterEvent, /) -> None:
-            self.set_stylesheet("#404040")
-            return super().enterEvent(event)
-
-        def leaveEvent(self, event: QEvent, /) -> None:
-            self.set_stylesheet("#303030")
-            return super().leaveEvent(event)
-
 
 class HistoryWidget(QFrame):
 
     clicked = Signal(str, object, int, bool)
+    remove = Signal(int, object)
 
-    def __init__(self, tag, *args, **kwargs):
+    def __init__(self, tag, index: int = 0, *args, **kwargs):
         super().__init__(*args, *kwargs)
 
         self.setObjectName("history-widget")
@@ -363,9 +381,11 @@ class HistoryWidget(QFrame):
         self.set_stylesheet("#303030")
         self.setCursor(Qt.CursorShape.PointingHandCursor)
 
+        self.index = index
+
         self.main_layout = QHBoxLayout(self)
         self.setLayout(self.main_layout)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(0, 0, 5, 0)
         self.main_layout.setSpacing(0)
         self.main_layout.setAlignment(
             Qt.AlignmentFlag.AlignVCenter | Qt.AlignmentFlag.AlignLeft
@@ -377,6 +397,7 @@ class HistoryWidget(QFrame):
         self.info_layout.setContentsMargins(5, 5, 5, 5)
         self.info_layout.setSpacing(0)
         self.info_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.info_frame.mousePressEvent = self.mouse_event
 
         self.limit_label = QLabel(f"{tag['limit']}", self)
         self.random_label = QLabel(f"Random", self)
@@ -400,8 +421,22 @@ class HistoryWidget(QFrame):
         self.text = self.format_text(tag["tags"])
         self.label = QLabel(self.text)
         self.label.setFont(QFont("Jetbrains Mono", 14))
+        self.label.mousePressEvent = lambda event: self.mouse_event(event)
 
         self.main_layout.addWidget(self.label)
+
+        # trash button
+        self.trash_button = Button(icon=QIcon("assets/delete.svg"))
+        self.trash_button.setSizePolicy(
+            QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum
+        )
+        self.trash_button.setFixedSize(50, 50)
+
+        self.main_layout.addWidget(
+            self.trash_button, stretch=1, alignment=Qt.AlignmentFlag.AlignRight
+        )
+        self.trash_button.set_icon_sizes(35, 40)
+        self.trash_button.clicked.connect(lambda: self.remove.emit(self.index, self))
 
     def format_text(self, tags: str) -> str:
         string = ""
@@ -424,7 +459,7 @@ class HistoryWidget(QFrame):
             """
         )
 
-    def mousePressEvent(self, ev: QMouseEvent, /) -> None:
+    def mouse_event(self, ev: QMouseEvent, /) -> None:
         self.clicked.emit(self.text, self, int(self.limit_label.text()), self.random)
         return super().mousePressEvent(ev)
 
@@ -532,87 +567,3 @@ class TagGraph(QScrollArea):
         def leaveEvent(self, event: QEvent, /) -> None:
             self.set_stylesheet("#303030")
             return super().leaveEvent(event)
-
-
-class IconButton(QFrame):
-
-    clicked = Signal()
-
-    def __init__(self, text: str, icon: QIcon, *args, **kwargs):
-        super().__init__(*args, *kwargs)
-
-        self.setFixedSize(250, 50)
-        self.set_stylesheet("#303030")
-        self.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.setObjectName("main-frame")
-
-        self.label_text = text
-        self.button_icon = icon
-
-        self.main_layout = QHBoxLayout(self)
-        self.setLayout(self.main_layout)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
-        self.main_layout.setSpacing(5)
-        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.main_font = QFont("Jetbrains Mono", 20)
-        self.label = QLabel(self.label_text)
-        self.label.setFont(self.main_font)
-
-        self.icon_button = QPushButton("")
-        self.icon_button.setIcon(self.button_icon)
-        self.icon_button.setIconSize(QSize(40, 40))
-
-        # make sure that if you click on the button specifically,
-        # it will click the entire thing
-        self.icon_button.mousePressEvent = self.mousePressEvent
-
-        self.icon_button.setStyleSheet(
-            """
-            border: none;
-            """
-        )
-
-        self.main_layout.addWidget(self.icon_button)
-        self.main_layout.addWidget(self.label)
-
-    def set_stylesheet(self, color: str) -> None:
-        self.setStyleSheet(
-            f"""
-            *{{
-                background-color: {color};
-                color: white;
-                border-radius: 5px;
-            }}
-            #main-frame {{
-                border: 1px solid hsla(0, 0%, 90%, 10%)
-            }}
-            """
-        )
-
-    def mousePressEvent(self, event: QMouseEvent, /) -> None:
-        self.main_font.setPointSize(18)
-        self.label.setFont(self.main_font)
-
-        self.icon_button.setIconSize(QSize(35, 35))
-        return super().mousePressEvent(event)
-
-    def mouseReleaseEvent(self, event: QMouseEvent, /) -> None:
-        self.main_font.setPointSize(20)
-        self.label.setFont(self.main_font)
-        if self.rect().contains(event.pos()):
-            self.clicked.emit()
-
-        self.icon_button.setIconSize(QSize(40, 40))
-        return super().mouseReleaseEvent(event)
-
-    def enterEvent(self, event: QEnterEvent, /) -> None:
-        self.set_stylesheet("#404040")
-        return super().enterEvent(event)
-
-    def leaveEvent(self, event: QEvent, /) -> None:
-        self.set_stylesheet("#303030")
-        return super().leaveEvent(event)
-
-    def doubleClickEvent(self, event: QMouseEvent, /) -> None:
-        event.ignore()

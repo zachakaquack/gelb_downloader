@@ -120,3 +120,21 @@ def save_search(tags: list, limit: int, random: bool) -> None:
     # write
     with open(f"{config_path}", "w") as f:
         f.write(json.dumps(data, indent=4))
+
+
+def remove_from_history(index: int) -> None:
+    config_path = get_config_path()
+    data = get_config()
+
+    search = data["search_history"]
+
+    if 0 <= index < len(search):
+        search.pop(index)
+    else:
+        print(f"invalid index: {index}")
+
+    data["search_history"] = search
+
+    # write
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(data, indent=4))

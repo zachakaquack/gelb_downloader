@@ -32,3 +32,4 @@ for more information on searching, check out [howto:cheatsheet](https://gelbooru
 - [ ] Custom directories for downloads, saved images, and deleted images
 - [ ] Adding your API key & user ID without going into the .json
 - [x] Help menu for searching
+- [x] More info on the post within the app

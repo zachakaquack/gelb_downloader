@@ -27,6 +27,11 @@ try:
 except ModuleNotFoundError:
     from other import serverside
 
+try:
+    from post_popup import TagBar
+except ModuleNotFoundError:
+    from widgets.post_popup import TagBar
+
 
 class Interface(QFrame):
     def __init__(self, *args, **kwargs):
@@ -47,16 +52,19 @@ class Interface(QFrame):
             Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignHCenter
         )
 
+        self.tag_bar = TagBar()
         self.image_area = ImageFrame()
         self.side_bar = SideBar()
 
         self.side_bar.clicked.connect(self.process_sidebar)
 
+        self.main_layout.addWidget(self.tag_bar)
         self.main_layout.addWidget(self.image_area)
         self.main_layout.addWidget(self.side_bar)
 
-        self.main_layout.setStretch(0, 90)
-        self.main_layout.setStretch(1, 10)
+        self.main_layout.setStretch(0, 15)
+        self.main_layout.setStretch(1, 75)
+        self.main_layout.setStretch(2, 10)
 
         self.current_image_path = ""
         self.tag_popup = None
@@ -73,6 +81,8 @@ class Interface(QFrame):
                 self.launch_popup()
             case "refresh":
                 self.load_new_image()
+            case _:
+                print(text)
 
     def save_image(self) -> None:
         saved_path = file_management.get_saved_path()
@@ -83,15 +93,7 @@ class Interface(QFrame):
     def delete_image(self) -> None:
         deleted_path = file_management.get_deleted_path()
         file_name = os.path.basename(self.current_image_path)
-        try:
-            os.rename(self.current_image_path, f"{deleted_path}/{file_name}")
-        except FileNotFoundError:
-            """
-            this usually happens because it's tryign to move the file (already deleted) into the
-            folder again for some reason. my laptop double clicks a lot on accident, and it may
-            just somehow be so fast it gets past this and sends this twice.
-            """
-            pass
+        os.rename(self.current_image_path, f"{deleted_path}/{file_name}")
         self.load_new_image()
 
     def load_new_image(self) -> None:
@@ -100,9 +102,11 @@ class Interface(QFrame):
 
         if files:
             self.current_image_path = files[0]
-            self.image_area.load_new_image(files[0])
+            self.image_area.load_new_image(f"{files[0]}")
+            self.tag_bar.refresh(f"{files[0]}")
         else:
             self.image_area.load_no_image()
+            self.tag_bar.remove_all()
 
     def launch_popup(self):
         self.popup = TagPopup()

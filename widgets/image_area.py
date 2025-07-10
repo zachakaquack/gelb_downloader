@@ -39,12 +39,14 @@ class ImageFrame(QFrame):
         self.progress = None
 
     def progress_bar(self, count, total) -> None:
-        # text, so it means we can load the progress bar
+
+        # there is text, so it means we can load the progress bar
         if self.image_label.text():
             self.image_label.hide()
 
         if not self.progress:
             self.progress = QProgressBar(self)
+            self.progress.setStyleSheet("color: white;")
             self.main_layout.insertWidget(0, self.progress)
             self.progress.setMinimum(0)
             self.progress.setMaximum(total)
@@ -76,7 +78,7 @@ class ImageFrame(QFrame):
         else:
             pixmap = QPixmap(image_path)
             scaled_pixmap = pixmap.scaled(
-                QSize(100000, 1080),
+                QSize(1200, 1080),
                 aspectMode=Qt.AspectRatioMode.KeepAspectRatio,
                 mode=Qt.TransformationMode.SmoothTransformation,
             )

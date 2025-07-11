@@ -15,6 +15,8 @@ for more information on searching, check out [howto:cheatsheet](https://gelbooru
 
 ![How searching works.](/assets/images/searching.png)
 
+![Startup Settings](/assets/images/startup_settings.png)
+
 # Installation
 - download and run `main.py` once
 - open up  `~/.config/gelbooru-downloader/config.json` (windows: `C:/Users/{USER}/.config/gelbooru-downloader/config.json`)

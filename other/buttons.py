@@ -10,7 +10,7 @@ class Button(QFrame):
     def __init__(self, text: str = "", icon: QIcon = None, *args, **kwargs):
         super().__init__(*args, *kwargs)
 
-        self.setFixedSize(250, 50)
+        # self.setFixedSize(250, 50)
         self.text_color = "white"
         self.set_stylesheet("#303030")
         self.setCursor(Qt.CursorShape.PointingHandCursor)

@@ -32,6 +32,11 @@ try:
 except ModuleNotFoundError:
     from widgets.post_popup import TagBar
 
+try:
+    from overlay import Overlay
+except ModuleNotFoundError:
+    from widgets.overlay import Overlay
+
 
 class Interface(QFrame):
     def __init__(self, *args, **kwargs):
@@ -69,7 +74,24 @@ class Interface(QFrame):
         self.current_image_path = ""
         self.tag_popup = None
 
-        self.load_new_image()
+        self.first_time_check()
+
+    # def keyPressEvent(self, event: QKeyEvent, /) -> None:
+    #     if event.key() == Qt.Key.Key_Space:
+    #         self.first_time_check()
+    #
+    #     return super().keyPressEvent(event)
+
+    def first_time_check(self) -> None:
+        config = file_management.get_config()
+        if config["settings"]["config_set"] == True:
+            self.load_new_image()
+            return
+
+        # config is not set. launch the starter popup
+        self.overlay = Overlay()
+        # delay to make it appear over the mainwindow
+        QTimer.singleShot(150, self.overlay.show)
 
     def process_sidebar(self, text: str) -> None:
         match text:

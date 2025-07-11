@@ -29,7 +29,8 @@ for more information on searching, check out [howto:cheatsheet](https://gelbooru
 # TODO
 - [x] General Code Cleanup
 - [x] Removing searches from history
-- [ ] Custom directories for downloads, saved images, and deleted images
-- [ ] Adding your API key & user ID without going into the .json
+- [x] Custom directories for downloads, saved images, and deleted images
+- [x] Adding your API key & user ID without going into the .json
 - [x] Help menu for searching
 - [x] More info on the post within the app
+- [ ] Settings window to change all of these past first launch

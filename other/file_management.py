@@ -138,3 +138,48 @@ def remove_from_history(index: int) -> None:
     # write
     with open(f"{config_path}", "w") as f:
         f.write(json.dumps(data, indent=4))
+
+
+def save_downloads_folder(path: str) -> None:
+    config = get_config()
+    config["downloads"]["downloads"] = path
+
+    config_path = get_config_path()
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(config, indent=4))
+
+
+def save_deleted_folder(path: str) -> None:
+    config = get_config()
+    config["downloads"]["deleted"] = path
+
+    config_path = get_config_path()
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(config, indent=4))
+
+
+def save_saved_folder(path: str) -> None:
+    config = get_config()
+    config["downloads"]["saved"] = path
+
+    config_path = get_config_path()
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(config, indent=4))
+
+
+def save_api_key(key: str) -> None:
+    config = get_config()
+    config["user_info"]["api_key"] = key
+
+    config_path = get_config_path()
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(config, indent=4))
+
+
+def save_user_id(user_id: str) -> None:
+    config = get_config()
+    config["user_info"]["user_id"] = user_id
+
+    config_path = get_config_path()
+    with open(f"{config_path}", "w") as f:
+        f.write(json.dumps(config, indent=4))

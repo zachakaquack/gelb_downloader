@@ -19,9 +19,8 @@ for more information on searching, check out [howto:cheatsheet](https://gelbooru
 
 # Installation
 - download and run `main.py` once
-- open up  `~/.config/gelbooru-downloader/config.json` (windows: `C:/Users/{USER}/.config/gelbooru-downloader/config.json`)
-- input your API key and user ID in `["user_info"]["api_key"]` and `["user_info"]["user_id"]` respectively - [How to find your API key & user ID](https://github.com/zachakaquack/gelb_downloader?tab=readme-ov-file#how-to-find-your-api-key-and-user-id)
-- run `main.py` again, and now you can search!
+- insert all the information prompted (will not work without!!!!!)
+- you can now search :)
 
 # How to find your API key and user ID
 - create a gelbooru account - linked here.
